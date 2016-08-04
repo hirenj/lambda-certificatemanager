@@ -137,6 +137,7 @@ let rotate_public_keys = function(key) {
 let update_function = function(func, content, filename) {
   let lambda = new AWS.Lambda();
   let params = {FunctionName: func };
+  console.log('Updating function ',func);
   lambda.getFunction(params).promise().then(function(result) {
     return get(result.Code.Location);
   }).then(get_zipfile).then(function(zip) {
