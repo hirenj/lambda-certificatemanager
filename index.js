@@ -138,7 +138,7 @@ let update_function = function(func, content, filename) {
   let lambda = new AWS.Lambda();
   let params = {FunctionName: func };
   console.log('Updating function ',func);
-  lambda.getFunction(params).promise().then(function(result) {
+  return lambda.getFunction(params).promise().then(function(result) {
     return get(result.Code.Location);
   }).then(get_zipfile).then(function(zip) {
     zip.file(filename, content);
@@ -151,7 +151,7 @@ let update_function = function(func, content, filename) {
 
 let update_function_private_keys = function(privkey) {
   console.log('Deploying private key kid ',privkey.kid);
-    return Promise.all(privkey_functions.map((func) => update_function(function_locations[func],JSON.stringify(privkey),'private')));
+  return Promise.all(privkey_functions.map((func) => update_function(function_locations[func],JSON.stringify(privkey),'private')));
 };
 
 let update_function_public_keys = function(local_keys) {
