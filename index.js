@@ -8,8 +8,7 @@
  * as a custom authorizer:
  *
  */
-const jwkToPem = require('jwk-to-pem');
-const pem2jwk = require('pem-jwk').pem2jwk
+const pem2jwk = require('pem-jwk').pem2jwk;
 const fs = require('fs');
 const AWS = require('lambda-helpers').AWS;
 const temp = require('temp');
@@ -64,7 +63,7 @@ let write_certs = function(certs,local) {
   return s3.putObject(params).promise();
 };
 
-let get = function(url,filename) {
+let get = function(url) {
   temp.track();
   let output = temp.createWriteStream();
   https.get(url,function(response) {
@@ -92,6 +91,7 @@ let read_file = function(filename) {
   });
 };
 
+/*
 let write_file = function(filename,content) {
   return new Promise(function(resolve,reject) {
     fs.writeFile(filename,content,function(err) {
@@ -103,6 +103,7 @@ let write_file = function(filename,content) {
     });
   });
 };
+*/
 
 let get_zipfile = function(filename) {
   return read_file(filename).then((data) => JSZip.loadAsync(data));
@@ -122,11 +123,11 @@ let rotate_public_keys = function(key) {
     if ( ! pubkeys ) {
       pubkeys = {'keys' : [] };
     }
-    console.log("Added in key with kid ",key.kid);
+    console.log('Added in key with kid ',key.kid);
     pubkeys.keys.push(new_public);
     if (pubkeys.keys.length > 10) {
       let removed = pubkeys.keys.splice(0,1);
-      console.log("Rotating out key with id ",removed[0].kid);
+      console.log('Rotating out key with id ',removed[0].kid);
     }
     return write_certs(pubkeys,true).then( () => pubkeys.keys );
   });
@@ -140,7 +141,7 @@ let update_function = function(func, content, filename) {
     return get(result.Code.Location);
   }).then(get_zipfile).then(function(zip) {
     zip.file(filename, content);
-    return zip.generateAsync({type:"nodebuffer"});
+    return zip.generateAsync({type:'nodebuffer'});
   }).then(function(buffer) {
     params.ZipFile = buffer;
     return lambda.updateFunctionCode(params).promise();
@@ -148,7 +149,7 @@ let update_function = function(func, content, filename) {
 };
 
 let update_function_private_keys = function(privkey) {
-  console.log("Deploying private key kid ",privkey.kid);
+  console.log('Deploying private key kid ',privkey.kid);
     return Promise.all(privkey_functions.map((func) => update_function(function_locations[func],JSON.stringify(privkey),'private')));
 };
 
@@ -167,10 +168,59 @@ let updateFunctions = function() {
 
   return rotate_public_keys(newkey)
   .then((keyset) => update_function_public_keys(keyset))
-  .then( () => console.log("Updated public keys in functions"))
-  .then(() => update_function_private_keys(newkey))
-  .then( () => console.log("Updated private keys in functions"));
+  .then( () => console.log('Updated public keys in functions'))
+  .then( () => update_function_private_keys(newkey))
+  .then( () => console.log('Updated private keys in functions'));
+};
+
+const get_file = require('lambda-helpers').get_file;
+
+var get_jwks = function(conf_url) {
+  return get_file(conf_url).then(function(conf) {
+    return get_file(conf.jwks_uri);
+  });
+};
+
+// Microsoft keys from
+// https://login.microsoftonline.com/common/discovery/v2.0/keys
+// Derived from https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration (jwks_uri)
+
+// Google keys from
+// https://accounts.google.com/.well-known/openid-configuration
+// https://www.googleapis.com/oauth2/v3/certs
+
+const google_conf = 'https://accounts.google.com/.well-known/openid-configuration';
+const ms_conf = 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration';
+
+exports.updateCertificates = function updateCertificates(event,context) {
+  let events = require('lambda-helpers').events;
+  Promise.all( [ get_jwks(ms_conf), get_jwks(google_conf) ] ).then(function(configs) {
+    let confs = configs.reduce(function(curr,next) {
+      if ( ! curr ) {
+        return next;
+      }
+      curr.keys = curr.keys.concat(next.keys);
+      return curr;
+    });
+    return write_certs(confs);
+  }).then(function() {
+    return events.setInterval('updateCertificates','12 hours').then(function() {
+      return events.subscribe('updateCertificates',context.invokedFunctionArn,{});
+    });
+  }).then(function() {
+    context.succeed('OK');
+  }).catch(function(err) {
+    console.log(err);
+    context.fail('NOT OK');
+  });
 };
 
 
-updateFunctions().catch(function(err) { console.log(err.stack,err); });
+exports.rotateCertificates = function(event,context) {
+  updateFunctions().then(() => context.succeed('OK'))
+  .catch(function(err) {
+    console.log(err);
+    console.log(err.stack);
+    context.fail('NOT OK');
+  });
+};

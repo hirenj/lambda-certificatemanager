@@ -1,5 +1,5 @@
 {
-  "name": "lambda-updatefunctions",
+  "name": "lambda-certificatemanager",
   "version": "0.1.0",
   "description": "AWS Lambda meta function for hot-patching credentials into functions",
   "main": "index.js",

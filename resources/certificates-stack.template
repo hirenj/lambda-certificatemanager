@@ -1,0 +1,176 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Resources": {
+    "CertsLogWriterPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties" : {
+        "PolicyName" : "CertsLogWriterPolicy",
+        "PolicyDocument" : {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "logs:CreateLogGroup",
+                  "logs:CreateLogStream",
+                  "logs:PutLogEvents"
+                ],
+                "Resource": "arn:aws:logs:*:*:*"
+              }
+            ]
+        },
+        "Roles" : [ { "Ref" : "LambdaRotateCertificatesRole" },{"Ref" : "LambdaUpdateCertificatesRole"} ]
+      },
+      "DependsOn" : ["LambdaRotateCertificatesRole","LambdaUpdateCertificatesRole"]
+    },
+    "LambdaUpdateCertificatesRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "ManagedPolicyArns" : [ { "Ref" : "WriteCertificatesConfig" }, { "Ref" : "RegisterEvents" } ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      }
+    },
+    "LambdaRotateCertificatesRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "ManagedPolicyArns" : [ {"Ref" : "WriteCertificatesConfig"}, {"Ref" : "RegisterEvents" }, { "Ref" : "UpdateFunctions" } ],
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      }
+    },
+    "updateCertificates" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+          "ZipFile": { "Fn::Join": ["", [
+            "exports.updateCertificates = function(event, context) {",
+            "  context.succeed('OK');",
+            "};"
+          ]]}
+        },
+        "Description" : "updateCertificates",
+        "Handler" : "index.updateCertificates",
+        "Role" : {"Fn::GetAtt" : ["LambdaUpdateCertificatesRole", "Arn"] },
+        "Runtime" : "nodejs",
+        "MemorySize" : 128,
+        "Timeout" : 60
+      },
+      "DependsOn" : "LambdaUpdateCertificatesRole"
+    },
+    "rotateCertificates" : {
+      "Type" : "AWS::Lambda::Function",
+      "Properties" : {
+        "Code" : {
+          "ZipFile": { "Fn::Join": ["", [
+            "exports.rotateCertificates = function(event, context) {",
+            "  context.succeed('OK');",
+            "};"
+          ]]}
+        },
+        "Description" : "rotateCertificates",
+        "Handler" : "index.rotateCertificates",
+        "Role" : {"Fn::GetAtt" : ["LambdaRotateCertificatesRole", "Arn"] },
+        "Runtime" : "nodejs",
+        "MemorySize" : 128,
+        "Timeout" : 20
+      },
+      "DependsOn" : "LambdaRotateCertificatesRole"
+    },
+    "UpdateFunctions" : {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "UpdateFunctions",
+        "PolicyDocument" : {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "UpdateFunctions",
+              "Effect": "Allow",
+              "Action": [
+                  "lambda:GetFunction",
+                  "lambda:UpdateFunctionCode"
+              ],
+              "Resource": [
+                { "Fn::GetAtt" : ["exchangetoken", "Arn"] },
+                { "Fn::GetAtt" : ["datahandler", "Arn"] },
+                { "Fn::GetAtt" : ["loginhandler", "Arn"] }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "WriteCertificatesConfig" : {
+      "Type": "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description" : "WriteCertificatesConfig",
+        "PolicyDocument" : {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "WriteCertificatesConfig",
+              "Effect": "Allow",
+              "Action": [
+                  "s3:PutObject",
+                  "s3:GetObject",
+                  "s3:PutObjectAcl"
+              ],
+              "Resource": [
+                { "Fn::Join" :  [ "", [ "arn:aws:s3:", ":", ":", { "Ref" : "dataBucket" }, "/conf/authcerts" ] ]},
+                { "Fn::Join" :  [ "", [ "arn:aws:s3:", ":", ":", { "Ref" : "dataBucket" }, "/conf/localcerts" ] ]}
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "LambdaUpdateCertificatesPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName" : { "Fn::GetAtt" : ["updateCertificates", "Arn"] },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn" : {"Fn::Join": [":", [ "arn:aws:events", { "Ref" : "AWS::Region" } , {"Ref" : "AWS::AccountId" }, "rule/updateCertificates"]] }
+      },
+      "Metadata" : {
+        "Comment" : "Used to update the pubkeys from auth providers"
+      }
+    },
+    "LambdaRotateCertificatesPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "FunctionName" : { "Fn::GetAtt" : ["rotateCertificates", "Arn"] },
+        "Action": "lambda:InvokeFunction",
+        "Principal": "events.amazonaws.com",
+        "SourceArn" : {"Fn::Join": [":", [ "arn:aws:events", { "Ref" : "AWS::Region" } , {"Ref" : "AWS::AccountId" }, "rule/rotateCertificates"]] }
+      },
+      "Metadata" : {
+        "Comment" : "Used to rotate certificates in deployed lambda functions"
+      }
+    }
+
+  },
+  "Outputs": {
+  }
+}
