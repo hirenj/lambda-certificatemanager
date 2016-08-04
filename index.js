@@ -217,7 +217,14 @@ exports.updateCertificates = function updateCertificates(event,context) {
 
 
 exports.rotateCertificates = function(event,context) {
-  updateFunctions().then(() => context.succeed('OK'))
+  let events = require('lambda-helpers').events;
+  updateFunctions()
+  .then(function() {
+    return events.setInterval('rotateCertificates','6 hours').then(function() {
+      return events.subscribe('rotateCertificates',context.invokedFunctionArn,{});
+    });
+  })
+  .then(() => context.succeed('OK'))
   .catch(function(err) {
     console.log(err);
     console.log(err.stack);
