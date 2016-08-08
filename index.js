@@ -55,6 +55,8 @@ let retrieve_certs = function(local) {
 
   return s3.getObject(params).promise().then(function(result){
     return JSON.parse(result.Body.toString());
+  }).catch(function() {
+    return;
   });
 };
 

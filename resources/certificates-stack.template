@@ -92,7 +92,7 @@
         "Handler" : "index.rotateCertificates",
         "Role" : {"Fn::GetAtt" : ["LambdaRotateCertificatesRole", "Arn"] },
         "Runtime" : "nodejs4.3",
-        "MemorySize" : 128,
+        "MemorySize" : 512,
         "Timeout" : 300
       },
       "DependsOn" : "LambdaRotateCertificatesRole"
