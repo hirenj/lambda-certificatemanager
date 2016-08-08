@@ -23,8 +23,8 @@ module.exports = function(grunt) {
         options: {
           file_name: 'index.js',
           handler: 'index.rotateCertificates',
+          region: config.region,
         },
-        region: config.region,
         function: config.functions['rotateCertificates'] || 'rotateCertificates',
         arn: null,
       },
@@ -33,8 +33,8 @@ module.exports = function(grunt) {
         options: {
           file_name: 'index.js',
           handler: 'index.updateCertificates',
+          region: config.region,
         },
-        region: config.region,
         function: config.functions['updateCertificates'] || 'updateCertificates',
         arn: null,
       }

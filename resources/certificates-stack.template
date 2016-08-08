@@ -93,7 +93,7 @@
         "Role" : {"Fn::GetAtt" : ["LambdaRotateCertificatesRole", "Arn"] },
         "Runtime" : "nodejs",
         "MemorySize" : 128,
-        "Timeout" : 20
+        "Timeout" : 300
       },
       "DependsOn" : "LambdaRotateCertificatesRole"
     },
