@@ -20,11 +20,17 @@ let function_locations = {};
 
 let bucket = 'gator';
 
+let config = {};
+
 try {
-    let config = require('./resources.conf.json');
+    config = require('./resources.conf.json');
     function_locations = config.functions;
     bucket = config.buckets.dataBucket;
 } catch (e) {
+}
+
+if (config.region) {
+  require('lambda-helpers').AWS.setRegion(config.region);
 }
 
 const pubkey_functions = ['loginhandler','datahandler'];
