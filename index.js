@@ -185,6 +185,9 @@ let updateFunctions = function() {
 const get_file = require('lambda-helpers').get_file;
 
 var get_jwks = function(conf_url) {
+  if ( ! conf_url ) {
+    return null;
+  }
   return get_file(conf_url).then(function(conf) {
     return get_file(conf.jwks_uri);
   });
@@ -200,11 +203,12 @@ var get_jwks = function(conf_url) {
 
 const google_conf = 'https://accounts.google.com/.well-known/openid-configuration';
 const ms_conf = 'https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration';
+const auth0_conf = process.env.AUTH0_DOMAIN ? 'https://'+process.env.AUTH0_DOMAIN+'.auth0.com/.well-known/openid-configuration' : null;
 
 exports.updateCertificates = function updateCertificates(event,context) {
   let events = require('lambda-helpers').events;
-  Promise.all( [ get_jwks(ms_conf), get_jwks(google_conf) ] ).then(function(configs) {
-    let confs = configs.reduce(function(curr,next) {
+  Promise.all( [ get_jwks(ms_conf), get_jwks(google_conf), get_wks(auth0_conf) ] ).then(function(configs) {
+    let confs = configs.filter( (keys) => keys !== null ).reduce(function(curr,next) {
       if ( ! curr ) {
         return next;
       }
