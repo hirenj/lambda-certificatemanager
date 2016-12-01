@@ -207,7 +207,7 @@ const auth0_conf = process.env.AUTH0_DOMAIN ? 'https://'+process.env.AUTH0_DOMAI
 
 exports.updateCertificates = function updateCertificates(event,context) {
   let events = require('lambda-helpers').events;
-  Promise.all( [ get_jwks(ms_conf), get_jwks(google_conf), get_wks(auth0_conf) ] ).then(function(configs) {
+  Promise.all( [ get_jwks(ms_conf), get_jwks(google_conf), get_jwks(auth0_conf) ] ).then(function(configs) {
     let confs = configs.filter( (keys) => keys !== null ).reduce(function(curr,next) {
       if ( ! curr ) {
         return next;
