@@ -13,6 +13,8 @@ module.exports = function(grunt) {
   } catch (e) {
   }
 
+  process.env['AWS_REGION'] = config.region;
+
   var self_funcs = Object.keys(require('./index')).filter( (func) => config.functions[func] );
 
   var config_options = {
