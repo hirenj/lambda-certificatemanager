@@ -1,5 +1,12 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters" : {
+    "AUTH0_DOMAIN" : {
+      "Type" : "String",
+      "Default" : "",
+      "Description" : "Auth0 domain for authentication"
+    }
+  },
   "Resources": {
     "CertsLogWriterPolicy": {
       "Type": "AWS::IAM::Policy",
@@ -71,6 +78,9 @@
         },
         "Description" : "updateCertificates",
         "Handler" : "index.updateCertificates",
+        "Environment" : { "Variables" : {
+          "AUTH0_DOMAIN" : {"Ref" : "AUTH0_DOMAIN"}
+        }},
         "Role" : {"Fn::GetAtt" : ["LambdaUpdateCertificatesRole", "Arn"] },
         "Runtime" : "nodejs4.3",
         "MemorySize" : 128,
