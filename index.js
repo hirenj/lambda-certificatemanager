@@ -206,7 +206,6 @@ const ms_conf = 'https://login.microsoftonline.com/common/v2.0/.well-known/openi
 const auth0_conf = process.env.AUTH0_DOMAIN ? 'https://'+process.env.AUTH0_DOMAIN+'.auth0.com/.well-known/openid-configuration' : null;
 
 exports.updateCertificates = function updateCertificates(event,context) {
-  let events = require('lambda-helpers').events;
   Promise.all( [ get_jwks(ms_conf), get_jwks(google_conf), get_jwks(auth0_conf) ] ).then(function(configs) {
     let confs = configs.filter( (keys) => keys !== null ).reduce(function(curr,next) {
       if ( ! curr ) {
@@ -217,10 +216,6 @@ exports.updateCertificates = function updateCertificates(event,context) {
     });
     return write_certs(confs);
   }).then(function() {
-    return events.setInterval('updateCertificates','12 hours').then(function() {
-      return events.subscribe('updateCertificates',context.invokedFunctionArn,{});
-    });
-  }).then(function() {
     context.succeed('OK');
   }).catch(function(err) {
     console.log(err);
@@ -230,13 +225,7 @@ exports.updateCertificates = function updateCertificates(event,context) {
 
 
 exports.rotateCertificates = function(event,context) {
-  let events = require('lambda-helpers').events;
   updateFunctions()
-  .then(function() {
-    return events.setInterval('rotateCertificates','6 hours').then(function() {
-      return events.subscribe('rotateCertificates',context.invokedFunctionArn,{});
-    });
-  })
   .then(() => context.succeed('OK'))
   .catch(function(err) {
     console.log(err);

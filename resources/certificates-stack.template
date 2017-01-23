@@ -155,6 +155,46 @@
         }
       }
     },
+    "updateCertificatesRule": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Name": "updateCertificatesRule",
+        "Description": "updateCertificates triggering event",
+        "ScheduleExpression": "rate(12 hours)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "updateCertificates",
+                "Arn"
+              ]
+            },
+            "Id": "updateCertificates"
+          }
+        ]
+      }
+    },
+    "rotateCertificatesRule": {
+      "Type": "AWS::Events::Rule",
+      "Properties": {
+        "Name": "rotateCertificatesRule",
+        "Description": "rotateCertificates triggering event",
+        "ScheduleExpression": "rate(6 hours)",
+        "State": "ENABLED",
+        "Targets": [
+          {
+            "Arn": {
+              "Fn::GetAtt": [
+                "rotateCertificates",
+                "Arn"
+              ]
+            },
+            "Id": "rotateCertificates"
+          }
+        ]
+      }
+    },
     "LambdaUpdateCertificatesPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
