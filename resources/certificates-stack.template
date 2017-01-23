@@ -1,10 +1,10 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Parameters" : {
-    "AUTH0_DOMAIN" : {
+    "AUTH0DOMAIN" : {
       "Type" : "String",
       "Default" : "",
-      "Description" : "Auth0 domain for authentication"
+      "Description" : "Auth0 domain for authentication (i.e. just 'example' from a domain of 'example.auth0.com')"
     }
   },
   "Resources": {
@@ -79,7 +79,7 @@
         "Description" : "updateCertificates",
         "Handler" : "index.updateCertificates",
         "Environment" : { "Variables" : {
-          "AUTH0_DOMAIN" : {"Ref" : "AUTH0_DOMAIN"}
+          "AUTH0_DOMAIN" : {"Ref" : "AUTH0DOMAIN"}
         }},
         "Role" : {"Fn::GetAtt" : ["LambdaUpdateCertificatesRole", "Arn"] },
         "Runtime" : "nodejs4.3",
