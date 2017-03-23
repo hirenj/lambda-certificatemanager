@@ -33,7 +33,7 @@
     "LambdaUpdateCertificatesRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
-        "ManagedPolicyArns" : [ { "Ref" : "WriteCertificatesConfig" }, { "Ref" : "RegisterEvents" } ],
+        "ManagedPolicyArns" : [ { "Ref" : "WriteCertificatesConfig" }],
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
@@ -51,7 +51,7 @@
     "LambdaRotateCertificatesRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
-        "ManagedPolicyArns" : [ {"Ref" : "WriteCertificatesConfig"}, {"Ref" : "RegisterEvents" }, { "Ref" : "UpdateFunctions" } ],
+        "ManagedPolicyArns" : [ {"Ref" : "WriteCertificatesConfig"}, { "Ref" : "UpdateFunctions" } ],
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
           "Statement": [
