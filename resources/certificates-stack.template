@@ -124,6 +124,7 @@
               "Resource": [
                 { "Fn::GetAtt" : ["exchangetoken", "Arn"] },
                 { "Fn::GetAtt" : ["datahandler", "Arn"] },
+                { "Fn::GetAtt" : ["rdatasethandler", "Arn"] },
                 { "Fn::GetAtt" : ["loginhandler", "Arn"] }
               ]
             }
