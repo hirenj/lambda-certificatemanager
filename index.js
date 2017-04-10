@@ -33,7 +33,7 @@ if (config.region) {
   require('lambda-helpers').AWS.setRegion(config.region);
 }
 
-const pubkey_functions = ['loginhandler','datahandler'];
+const pubkey_functions = ['loginhandler','datahandler','rdatasethandler'];
 const privkey_functions = ['exchangetoken'];
 
 let generate_signing_key = function() {
