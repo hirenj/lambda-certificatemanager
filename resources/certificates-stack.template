@@ -82,7 +82,7 @@
           "AUTH0_DOMAIN" : {"Ref" : "AUTH0DOMAIN"}
         }},
         "Role" : {"Fn::GetAtt" : ["LambdaUpdateCertificatesRole", "Arn"] },
-        "Runtime" : "nodejs4.3",
+        "Runtime" : "nodejs6.10",
         "MemorySize" : 128,
         "Timeout" : 60
       },
@@ -101,7 +101,7 @@
         "Description" : "rotateCertificates",
         "Handler" : "index.rotateCertificates",
         "Role" : {"Fn::GetAtt" : ["LambdaRotateCertificatesRole", "Arn"] },
-        "Runtime" : "nodejs4.3",
+        "Runtime" : "nodejs6.10",
         "MemorySize" : 512,
         "Timeout" : 300
       },
