@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  AUTH0DOMAIN:
+    Type: String
+    Default: ''
+    Description: Auth0 domain for authentication (i.e. just 'example' from a domain
+      of 'example.auth0.com')
+Resources:
+  CertsLogWriterPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: CertsLogWriterPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource: arn:aws:logs:*:*:*
+      Roles:
+        - !Ref 'LambdaRotateCertificatesRole'
+        - !Ref 'LambdaUpdateCertificatesRole'
+    DependsOn:
+      - LambdaRotateCertificatesRole
+      - LambdaUpdateCertificatesRole
+  LambdaUpdateCertificatesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Ref 'WriteCertificatesConfig'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+  LambdaRotateCertificatesRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Ref 'WriteCertificatesConfig'
+        - !Ref 'UpdateFunctions'
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+  updateCertificates:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: exports.updateCertificates = function(event, context) {  context.succeed('OK');};
+      Description: updateCertificates
+      Handler: index.updateCertificates
+      Environment:
+        Variables:
+          AUTH0_DOMAIN: !Ref 'AUTH0DOMAIN'
+      Role: !GetAtt 'LambdaUpdateCertificatesRole.Arn'
+      Runtime: nodejs8.10
+      MemorySize: 128
+      Timeout: 60
+    DependsOn: LambdaUpdateCertificatesRole
+  rotateCertificates:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: exports.rotateCertificates = function(event, context) {  context.succeed('OK');};
+      Description: rotateCertificates
+      Handler: index.rotateCertificates
+      Role: !GetAtt 'LambdaRotateCertificatesRole.Arn'
+      Runtime: nodejs8.10
+      MemorySize: 512
+      Timeout: 300
+    DependsOn: LambdaRotateCertificatesRole
+  UpdateFunctions:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: UpdateFunctions
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: UpdateFunctions
+            Effect: Allow
+            Action:
+              - lambda:GetFunction
+              - lambda:UpdateFunctionCode
+            Resource:
+              - !GetAtt 'exchangetoken.Arn'
+              - !GetAtt 'datahandler.Arn'
+              - !GetAtt 'rdatasethandler.Arn'
+              - !GetAtt 'loginhandler.Arn'
+  WriteCertificatesConfig:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: WriteCertificatesConfig
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: WriteCertificatesConfig
+            Effect: Allow
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:PutObjectAcl
+            Resource:
+              - !Sub 'arn:aws:s3:::${dataBucket}/conf/authcerts'
+              - !Sub 'arn:aws:s3:::${dataBucket}/conf/localcerts'
+  updateCertificatesRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub 'updateCertificatesRule-${AWS::StackName}'
+      Description: updateCertificates triggering event
+      ScheduleExpression: rate(12 hours)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt 'updateCertificates.Arn'
+          Id: updateCertificates
+  rotateCertificatesRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub 'rotateCertificatesRule-${AWS::StackName}'
+      Description: rotateCertificates triggering event
+      ScheduleExpression: rate(6 hours)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt 'rotateCertificates.Arn'
+          Id: rotateCertificates
+  LambdaUpdateCertificatesPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt 'updateCertificates.Arn'
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/updateCertificatesRule-${AWS::StackName}'
+    Metadata:
+      Comment: Used to update the pubkeys from auth providers
+  LambdaRotateCertificatesPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt 'rotateCertificates.Arn'
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/rotateCertificatesRule-${AWS::StackName}'
+    Metadata:
+      Comment: Used to rotate certificates in deployed lambda functions
+Outputs: {}
