@@ -42,7 +42,21 @@ Resources:
     Properties:
       ManagedPolicyArns:
         - !Ref 'WriteCertificatesConfig'
-        - !Ref 'UpdateFunctions'
+      Policies:
+        - PolicyName: UpdateFunctions
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: UpdateFunctions
+                Effect: Allow
+                Action:
+                  - lambda:GetFunction
+                  - lambda:UpdateFunctionCode
+                Resource:
+                  - !GetAtt 'exchangetoken.Arn'
+                  - !GetAtt 'datahandler.Arn'
+                  - !GetAtt 'rdatasethandler.Arn'
+                  - !GetAtt 'loginhandler.Arn'
       AssumeRolePolicyDocument:
         Version: '2012-10-17'
         Statement:
@@ -77,23 +91,6 @@ Resources:
       MemorySize: 512
       Timeout: 300
     DependsOn: LambdaRotateCertificatesRole
-  UpdateFunctions:
-    Type: AWS::IAM::ManagedPolicy
-    Properties:
-      Description: UpdateFunctions
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Sid: UpdateFunctions
-            Effect: Allow
-            Action:
-              - lambda:GetFunction
-              - lambda:UpdateFunctionCode
-            Resource:
-              - !GetAtt 'exchangetoken.Arn'
-              - !GetAtt 'datahandler.Arn'
-              - !GetAtt 'rdatasethandler.Arn'
-              - !GetAtt 'loginhandler.Arn'
   WriteCertificatesConfig:
     Type: AWS::IAM::ManagedPolicy
     Properties:
