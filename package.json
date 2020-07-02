@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "./node_modules/jshint/bin/jshint index.js",
+    "lint": "./node_modules/jshint/bin/jshint index.js lambdas/*",
     "validate": "npm ls"
   },
   "repository": {},
@@ -29,7 +29,12 @@
     "precommit-hook": "^3.0.0",
     "aws-sdk": "^2.7.21",
     "grunt-force-task": "^2.0.0",
-    "grunt-git-describe": "^2.4.2"
+    "grunt-git-describe": "^2.4.2",
+    "git-revision-webpack-plugin": "^3.0.6",
+    "remove-files-webpack-plugin": "^1.4.3",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.12",
+    "zip-webpack-plugin": "^3.0.0"
   },
   "pre-commit": [
     "lint"
