@@ -1,0 +1,1 @@
+exports.updateCertificates = require('../js/common').updateCertificates;

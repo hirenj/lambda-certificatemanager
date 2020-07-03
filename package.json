@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "./node_modules/jshint/bin/jshint index.js lambdas/*",
-    "validate": "npm ls"
+    "lint": "node ./node_modules/jshint/bin/jshint index.js lambdas/*",
+    "validate": "pnpm ls"
   },
   "repository": {},
   "keywords": [],
@@ -20,21 +20,17 @@
     "temp": "^0.8.3"
   },
   "devDependencies": {
+    "aws-sdk": "^2.7.21",
     "grunt": "^0.4.5",
     "grunt-aws": "^0.6.1",
     "grunt-aws-lambda": "^0.11.0",
     "grunt-env": "^0.4.4",
+    "grunt-force-task": "^2.0.0",
+    "grunt-git-describe": "^2.4.2",
     "jshint": "^2.9.2",
     "load-grunt-tasks": "^3.4.0",
     "precommit-hook": "^3.0.0",
-    "aws-sdk": "^2.7.21",
-    "grunt-force-task": "^2.0.0",
-    "grunt-git-describe": "^2.4.2",
-    "git-revision-webpack-plugin": "^3.0.6",
-    "remove-files-webpack-plugin": "^1.4.3",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.12",
-    "zip-webpack-plugin": "^3.0.0"
+    "gator-webpack" : "hirenj/gator-webpack"
   },
   "pre-commit": [
     "lint"
