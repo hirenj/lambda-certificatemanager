@@ -58,7 +58,7 @@ Resources:
         Variables:
           AUTH0_DOMAIN: !Ref 'AUTH0DOMAIN'
       Role: !GetAtt 'LambdaUpdateCertificatesRole.Arn'
-      Runtime: nodejs8.10
+      Runtime: !Ref nodejsversion
       MemorySize: 128
       Timeout: 60
     DependsOn: LambdaUpdateCertificatesRole
@@ -70,7 +70,7 @@ Resources:
       Description: rotateCertificates
       Handler: index.rotateCertificates
       Role: !GetAtt 'LambdaRotateCertificatesRole.Arn'
-      Runtime: nodejs8.10
+      Runtime: !Ref nodejsversion
       MemorySize: 512
       Timeout: 300
     DependsOn: LambdaRotateCertificatesRole
